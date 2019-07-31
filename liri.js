@@ -1,10 +1,10 @@
 require("dotenv").config();
-
 var fs = require("fs");
 var moment = require("moment");
 var axios = require("axios");
 var Spotify = require("node-spotify-api");
-var keys = require("./keys.js");
+var keys = require('./keys.js');
+var spotify = new Spotify(keys.spotify);
 
 // =====================================================================================================
 
@@ -39,22 +39,6 @@ function app(command, params) {
     }
 }
 
-
-
-//Spotify
-// var spotify = new Spotify(keys.spotify);
-
-// spotify.request('https://api.spotify.com/v1/search?q=track:' + songName + '&type=track&limit=10', function (error, songResponse) {
-//     if (error) {
-//         return console.log(error);
-//     }
-//     console.log("Artist: " + songResponse.tracks.items[0].artists[0].name);
-//     console.log("Song: " + songResponse.tracks.items[0].name);
-//     console.log("URL: " + songResponse.tracks.items[0].preview_url);
-//     console.log("Album: " + songResponse.tracks.items[0].album.name);
-// });
-
-
 function bandInfo(bandName) {
 
     //Bands in Town
@@ -73,17 +57,6 @@ function bandInfo(bandName) {
         }
     );
 };
-
-function songInfo() {
-    var songName = "";
-    for (var i = 3; i < userInput.length; i++) {
-        if (i > 3 && i < userInput.length) {
-            songName = songName + "+" + userInput[i];
-        } else {
-            songName += userInput[i];
-        }
-    }
-}
 
 function movieInfo(movieName) {
 
@@ -107,8 +80,8 @@ function movieInfo(movieName) {
 function doIt() {
     let command;
     let params;
-    fs.readFile("random.txt", "ütf8", function (error, data) {
-        if(error) throw error;
+    fs.readFile("random.txt", "utf8", function (error, data) {
+        if (error) throw error;
 
         var dataArray = data.split(",");
 
@@ -118,6 +91,35 @@ function doIt() {
             params = dataArray[i];
             app(command, params);
         }
-        
+
     })
 }
+
+function songInfo(song) {
+
+    if (song === undefined || song === " ") {
+        song = "piki"
+    };
+    spotify.search({
+            type: "track",
+            query: song
+        },
+        function (err, data) {
+            if (err) {
+                console.log("Error occurred: " + err);
+                return;
+            }
+
+            for (var i = 0; i < data.tracks.items.length; i++) {
+                var songs = data.tracks.items[i];
+                console.log("Number: ", i + 1, "/", data.tracks.items.length);
+                console.log("artist(s): " + songs.artists.map(getArtistNames));
+                console.log("song name: " + songs.name);
+                console.log("preview song: " + songs.preview_url);
+                console.log("album: " + songs.album.name);
+                console.log("==================================================================================");
+            }
+        }
+    )
+    getArtistNames = artist => artist.name;
+};
